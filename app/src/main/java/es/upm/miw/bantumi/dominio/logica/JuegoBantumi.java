@@ -215,4 +215,8 @@ public class JuegoBantumi {
     public void deserializa(String juegoSerializado) {
         // @TODO
     }
+    public void reiniciarPartida(Turno turno) {
+        inicializar(turno); // Reinicializa el estado del juego con el turno especificado
+    }
+
 }

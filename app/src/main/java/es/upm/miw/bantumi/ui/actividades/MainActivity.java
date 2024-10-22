@@ -50,38 +50,14 @@ public class MainActivity extends AppCompatActivity {
         crearObservadores();
     }
 
-    /**
-     * Crea y subscribe los observadores asignados a las posiciones del tablero.
-     * Si se modifica el contenido del tablero -> se actualiza la vista.
-     */
     private void crearObservadores() {
         for (int i = 0; i < JuegoBantumi.NUM_POSICIONES; i++) {
             int finalI = i;
-            bantumiVM.getNumSemillas(i).observe(    // Huecos y almacenes
-                    this,
-                    new Observer<Integer>() {
-                        @Override
-                        public void onChanged(Integer integer) {
-                            mostrarValor(finalI, juegoBantumi.getSemillas(finalI));
-                        }
-                    });
+            bantumiVM.getNumSemillas(i).observe(this, integer -> mostrarValor(finalI, juegoBantumi.getSemillas(finalI)));
         }
-        bantumiVM.getTurno().observe(   // Turno
-                this,
-                new Observer<JuegoBantumi.Turno>() {
-                    @Override
-                    public void onChanged(JuegoBantumi.Turno turno) {
-                        marcarTurno(juegoBantumi.turnoActual());
-                    }
-                }
-        );
+        bantumiVM.getTurno().observe(this, turno -> marcarTurno(juegoBantumi.turnoActual()));
     }
 
-    /**
-     * Indica el turno actual cambiando el color del texto
-     *
-     * @param turnoActual turno actual
-     */
     private void marcarTurno(@NonNull JuegoBantumi.Turno turnoActual) {
         TextView tvJugador1 = findViewById(R.id.tvPlayer1);
         TextView tvJugador2 = findViewById(R.id.tvPlayer2);
@@ -104,15 +80,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Muestra el valor <i>valor</i> en la posición <i>pos</i>
-     *
-     * @param pos posición a actualizar
-     * @param valor valor a mostrar
-     */
     private void mostrarValor(int pos, int valor) {
         String num2digitos = String.format(Locale.getDefault(), "%02d", pos);
-        // Los identificadores de los huecos tienen el formato casilla_XX
         int idBoton = getResources().getIdentifier("casilla_" + num2digitos, "id", getPackageName());
         if (0 != idBoton) {
             TextView viewHueco = findViewById(idBoton);
@@ -128,9 +97,6 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-//            case R.id.opcAjustes: // @todo Preferencias
-//                startActivity(new Intent(this, BantumiPrefs.class));
-//                return true;
             case R.id.opcAcercaDe:
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.aboutTitle)
@@ -139,25 +105,36 @@ public class MainActivity extends AppCompatActivity {
                         .show();
                 return true;
 
-            // @TODO!!! resto opciones
-
-            default:
-                Snackbar.make(
-                        findViewById(android.R.id.content),
-                        getString(R.string.txtSinImplementar),
-                        Snackbar.LENGTH_LONG
-                ).show();
+            case R.id.opcReiniciarPartida:
+                mostrarDialogoReinicio(); // Llama al método que muestra el diálogo de reinicio
+                return true;
         }
-        return true;
+        return super.onOptionsItemSelected(item); // Llama al super para manejar otros casos
     }
 
-    /**
-     * Acción que se ejecuta al pulsar sobre cualquier hueco
-     *
-     * @param v Vista pulsada (hueco)
-     */
+    private void mostrarDialogoReinicio() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.txtReiniciarPartida) // Título del diálogo
+                .setMessage(R.string.txtReiniciarPartida) // Mensaje del diálogo
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> reiniciarPartida()) // Reinicia la partida
+                .setNegativeButton(android.R.string.cancel, null) // Opción para cancelar
+                .show();
+    }
+
+    private void reiniciarPartida() {
+        juegoBantumi.reiniciarPartida(JuegoBantumi.Turno.turnoJ1); // Reinicia el juego con J1
+        actualizarUI(); // Actualiza la interfaz de usuario
+    }
+
+    private void actualizarUI() {
+        for (int i = 0; i < JuegoBantumi.NUM_POSICIONES; i++) {
+            mostrarValor(i, juegoBantumi.getSemillas(i)); // Actualiza los valores en la UI
+        }
+        marcarTurno(juegoBantumi.turnoActual()); // Actualiza el turno visualmente
+    }
+
     public void huecoPulsado(@NonNull View v) {
-        String resourceName = getResources().getResourceEntryName(v.getId()); // pXY
+        String resourceName = getResources().getResourceEntryName(v.getId());
         int num = Integer.parseInt(resourceName.substring(resourceName.length() - 2));
         Log.i(LOG_TAG, "huecoPulsado(" + resourceName + ") num=" + num);
         switch (juegoBantumi.turnoActual()) {
@@ -169,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(LOG_TAG, "* Juega Computador");
                 juegoBantumi.juegaComputador();
                 break;
-            default:    // JUEGO TERMINADO
+            default: // JUEGO TERMINADO
                 finJuego();
         }
         if (juegoBantumi.juegoTerminado()) {
@@ -177,9 +154,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * El juego ha terminado. Volver a jugar?
-     */
     private void finJuego() {
         String texto = (juegoBantumi.getSemillas(6) > 6 * numInicialSemillas)
                 ? "Gana Jugador 1"

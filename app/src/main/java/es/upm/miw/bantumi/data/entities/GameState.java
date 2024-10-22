@@ -7,20 +7,36 @@ import androidx.room.PrimaryKey;
 public class GameState {
     @PrimaryKey(autoGenerate = true)
     private int id;
-    private int[] playerField;  // Las 6 casillas del jugador
-    private int[] opponentField; // Las 6 casillas del oponente
-    private int playerStore;
-    private int opponentStore;
-    private boolean isPlayerTurn;
+    private String estadoSemillas; // Cadena que almacena el estado de las semillas
+    private String turnoActual; // Turno actual en formato de cadena
 
-    public GameState(int[] playerField, int[] opponentField, int playerStore, int opponentStore, boolean isPlayerTurn) {
-        this.playerField = playerField;
-        this.opponentField = opponentField;
-        this.playerStore = playerStore;
-        this.opponentStore = opponentStore;
-        this.isPlayerTurn = isPlayerTurn;
+    // Constructor, getters y setters
+    public GameState(String estadoSemillas, String turnoActual) {
+        this.estadoSemillas = estadoSemillas;
+        this.turnoActual = turnoActual;
     }
 
-    // Getters y Setters
-    // ...
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getEstadoSemillas() {
+        return estadoSemillas;
+    }
+
+    public void setEstadoSemillas(String estadoSemillas) {
+        this.estadoSemillas = estadoSemillas;
+    }
+
+    public String getTurnoActual() {
+        return turnoActual;
+    }
+
+    public void setTurnoActual(String turnoActual) {
+        this.turnoActual = turnoActual;
+    }
 }

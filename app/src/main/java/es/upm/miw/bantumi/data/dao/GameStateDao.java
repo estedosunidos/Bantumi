@@ -10,11 +10,8 @@ import es.upm.miw.bantumi.data.entities.GameState;
 @Dao
 public interface GameStateDao {
     @Insert
-    void saveGameState(GameState gameState);
+    void guardarEstado(GameState estadoJuego);
 
-    @Query("SELECT * FROM game_state LIMIT 1")
-    GameState getGameState();
-
-    @Query("DELETE FROM game_state")
-    void deleteGameState();
+    @Query("SELECT * FROM game_state ORDER BY id DESC LIMIT 1")
+    GameState obtenerUltimoEstado();
 }
