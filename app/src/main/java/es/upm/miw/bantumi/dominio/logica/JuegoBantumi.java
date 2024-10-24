@@ -1,8 +1,12 @@
 package es.upm.miw.bantumi.dominio.logica;
 
+import android.content.Context;
 import android.util.Log;
 
+import java.io.FileOutputStream;
+
 import es.upm.miw.bantumi.ui.viewmodel.BantumiViewModel;
+
 public class JuegoBantumi {
 
     public static final int NUM_POSICIONES = 14;
@@ -12,6 +16,7 @@ public class JuegoBantumi {
     // Posición 13: depósito jugador 2
 
     private final BantumiViewModel bantumiVM;
+
 
     // Turno juego
     public enum Turno {
@@ -190,8 +195,8 @@ public class JuegoBantumi {
      */
     public void juegaComputador() {
         while (this.turnoActual() == Turno.turnoJ2) {
-            int pos = 7 + (int) (Math.random() * 6);    // posición aleatoria [7..12]
-            if (this.getSemillas(pos) != 0 && (pos < NUM_POSICIONES - 1)) {
+            int pos = 7 + (int) (Math.random() * 6); // posición aleatoria [7..12]
+            if (this.getSemillas(pos) != 0) {
                 this.jugar(pos);
             }
         }
@@ -203,8 +208,20 @@ public class JuegoBantumi {
      * @return juego serializado
      */
     public String serializa() {
-        // @TODO
-        return null;
+        StringBuilder sb = new StringBuilder();
+
+        // Serializar el turno actual
+        sb.append(turnoActual().ordinal()).append(";"); // 0 para turnoJ1, 1 para turnoJ2, 2 para Turno_TERMINADO
+
+        // Serializar las semillas en cada posición
+        for (int i = 0; i < NUM_POSICIONES; i++) {
+            sb.append(getSemillas(i));
+            if (i < NUM_POSICIONES - 1) {
+                sb.append(","); // Separador entre posiciones
+            }
+        }
+
+        return sb.toString();
     }
 
     /**
@@ -213,10 +230,25 @@ public class JuegoBantumi {
      * @param juegoSerializado cadena que representa el estado completo del juego
      */
     public void deserializa(String juegoSerializado) {
-        // @TODO
+        String[] partes = juegoSerializado.split(";");
+
+        // Restaurar el turno
+        int turnoOrdinal = Integer.parseInt(partes[0]);
+        setTurno(Turno.values()[turnoOrdinal]); // Asignar el turno basado en el ordinal
+
+        // Restaurar las semillas en cada posición
+        String[] semillas = partes[1].split(",");
+        for (int i = 0; i < NUM_POSICIONES; i++) {
+            setSemillas(i, Integer.parseInt(semillas[i]));
+        }
     }
-    public void reiniciarPartida(Turno turno) {
-        inicializar(turno); // Reinicializa el estado del juego con el turno especificado
+    public void reiniciarPartida(Turno turnoInicial) {
+        inicializar(turnoInicial);
+        setTurno(turnoInicial);
+        Log.i("MiW", "Partida reiniciada. Turno inicial: " + turnoInicial);
     }
+
+
+
 
 }

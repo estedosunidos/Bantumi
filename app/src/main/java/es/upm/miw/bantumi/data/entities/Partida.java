@@ -1,4 +1,5 @@
 package es.upm.miw.bantumi.data.entities;
+
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -6,59 +7,49 @@ import java.util.Date;
 
 @Entity(tableName = "partidas")
 public class Partida {
-
     @PrimaryKey(autoGenerate = true)
-    public int id;
+    private long id;  // Identificador único
+    private Date fecha; // Fecha de la partida
+    private int puntuacionJ1; // Puntuación del Jugador 1
+    private int puntuacionJ2; // Puntuación del Jugador 2
 
-    public String nombreJugador;
-    public Date fechaHora;
-    public int semillasAlmacenJ1;
-    public int semillasAlmacenJ2;
-
-    public Partida(String nombreJugador, Date fechaHora, int semillasAlmacenJ1, int semillasAlmacenJ2) {
-        this.nombreJugador = nombreJugador;
-        this.fechaHora = fechaHora;
-        this.semillasAlmacenJ1 = semillasAlmacenJ1;
-        this.semillasAlmacenJ2 = semillasAlmacenJ2;
+    // Constructor
+    public Partida(Date fecha, int puntuacionJ1, int puntuacionJ2) {
+        this.fecha = fecha;
+        this.puntuacionJ1 = puntuacionJ1;
+        this.puntuacionJ2 = puntuacionJ2;
     }
 
-    public int getId() {
+    // Getters y Setters
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
-    public String getNombreJugador() {
-        return nombreJugador;
+    public Date getFecha() {
+        return fecha;
     }
 
-    public void setNombreJugador(String nombreJugador) {
-        this.nombreJugador = nombreJugador;
+    public void setFecha(Date fecha) {
+        this.fecha = fecha;
     }
 
-    public Date getFechaHora() {
-        return fechaHora;
+    public int getPuntuacionJ1() {
+        return puntuacionJ1;
     }
 
-    public void setFechaHora(Date fechaHora) {
-        this.fechaHora = fechaHora;
+    public void setPuntuacionJ1(int puntuacionJ1) {
+        this.puntuacionJ1 = puntuacionJ1;
     }
 
-    public int getSemillasAlmacenJ1() {
-        return semillasAlmacenJ1;
+    public int getPuntuacionJ2() {
+        return puntuacionJ2;
     }
 
-    public void setSemillasAlmacenJ1(int semillasAlmacenJ1) {
-        this.semillasAlmacenJ1 = semillasAlmacenJ1;
-    }
-
-    public int getSemillasAlmacenJ2() {
-        return semillasAlmacenJ2;
-    }
-
-    public void setSemillasAlmacenJ2(int semillasAlmacenJ2) {
-        this.semillasAlmacenJ2 = semillasAlmacenJ2;
+    public void setPuntuacionJ2(int puntuacionJ2) {
+        this.puntuacionJ2 = puntuacionJ2;
     }
 }

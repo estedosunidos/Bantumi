@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import es.upm.miw.bantumi.data.dao.GameStateDao;
+import es.upm.miw.bantumi.data.dao.ResultadoDao;
 import es.upm.miw.bantumi.data.dao.partidoDao;
 import es.upm.miw.bantumi.data.entities.GameState;
 import es.upm.miw.bantumi.data.entities.Partida;
@@ -30,4 +31,6 @@ public abstract class AppDatabase extends RoomDatabase {
         }
         return instance;
     }
+
+
 }

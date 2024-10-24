@@ -1,4 +1,5 @@
 package es.upm.miw.bantumi.data.dao;
+
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
@@ -11,6 +12,10 @@ import es.upm.miw.bantumi.data.entities.Partida;
 public interface partidoDao {
     @Insert
     void insertarPartida(Partida partida);
-    @Query("SELECT * FROM partidas ORDER BY fechaHora DESC")
-    List<Partida> obtenerTodasPartidas();
+
+    @Query("SELECT * FROM partidas ORDER BY fecha DESC")
+    List<Partida> obtenerTodasLasPartidas();
+
+    @Query("DELETE FROM partidas")
+    void borrarTodasLasPartidas();
 }
