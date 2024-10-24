@@ -105,7 +105,7 @@ public class JuegoBantumi {
         // Si acaba en hueco vacío en propio campo -> recoger propio + contrario
         if (getSemillas(nextPos) == 1
                 && ((turnoActual() == Turno.turnoJ1 && nextPos < 6)
-                    || (turnoActual() == Turno.turnoJ2 && nextPos > 6 && nextPos < 13))
+                || (turnoActual() == Turno.turnoJ2 && nextPos > 6 && nextPos < 13))
         ) {
             int posContrario = 12 - nextPos;
             Log.i("MiW", "\trecoger: turno=" + turnoActual() + ", pos=" + nextPos + ", contrario=" + posContrario);

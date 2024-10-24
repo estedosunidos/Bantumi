@@ -1,36 +1,50 @@
 package es.upm.miw.bantumi.ui.actividades;
 
 import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.Gson;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
+import es.upm.miw.bantumi.data.database.AppDatabase;
+import es.upm.miw.bantumi.data.entities.Partida;
 import es.upm.miw.bantumi.ui.fragmentos.FinalAlertDialog;
 import es.upm.miw.bantumi.R;
 import es.upm.miw.bantumi.dominio.logica.JuegoBantumi;
 import es.upm.miw.bantumi.ui.viewmodel.BantumiViewModel;
 
 public class MainActivity extends AppCompatActivity {
-
     protected final String LOG_TAG = "MiW";
     public JuegoBantumi juegoBantumi;
     private BantumiViewModel bantumiVM;
     int numInicialSemillas;
+    private AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        // Instancia el ViewModel y el juego, y asigna observadores a los huecos
         numInicialSemillas = getResources().getInteger(R.integer.intNumInicialSemillas);
         bantumiVM = new ViewModelProvider(this).get(BantumiViewModel.class);
         juegoBantumi = new JuegoBantumi(bantumiVM, JuegoBantumi.Turno.turnoJ1, numInicialSemillas);
@@ -95,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.opcAcercaDe:
@@ -106,31 +120,42 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             case R.id.opcReiniciarPartida:
-                mostrarDialogoReinicio(); // Llama al método que muestra el diálogo de reinicio
+                mostrarDialogoReinicio();
                 return true;
+            case R.id.opcGuardarPartida:
+                guardarPartida();
+                return true;
+
+            case R.id.opcRecuperarPartida:
+                recuperarPartida();
+                return true;
+            case R.id.opcMejoresResultados:
+                mostrarResultados();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item); // Llama al super para manejar otros casos
     }
 
     private void mostrarDialogoReinicio() {
         new AlertDialog.Builder(this)
-                .setTitle(R.string.txtReiniciarPartida) // Título del diálogo
-                .setMessage(R.string.txtReiniciarPartida) // Mensaje del diálogo
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> reiniciarPartida()) // Reinicia la partida
-                .setNegativeButton(android.R.string.cancel, null) // Opción para cancelar
+                .setTitle(R.string.txtReiniciarPartida)
+                .setMessage(R.string.txtReiniciarPartida)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> reiniciarPartida())
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 
     private void reiniciarPartida() {
-        juegoBantumi.reiniciarPartida(JuegoBantumi.Turno.turnoJ1); // Reinicia el juego con J1
-        actualizarUI(); // Actualiza la interfaz de usuario
+        juegoBantumi.reiniciarPartida(JuegoBantumi.Turno.turnoJ1);
+        actualizarUI();
     }
 
     private void actualizarUI() {
         for (int i = 0; i < JuegoBantumi.NUM_POSICIONES; i++) {
-            mostrarValor(i, juegoBantumi.getSemillas(i)); // Actualiza los valores en la UI
+            mostrarValor(i, juegoBantumi.getSemillas(i));
         }
-        marcarTurno(juegoBantumi.turnoActual()); // Actualiza el turno visualmente
+        marcarTurno(juegoBantumi.turnoActual());
     }
 
     public void huecoPulsado(@NonNull View v) {
@@ -155,16 +180,112 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void finJuego() {
-        String texto = (juegoBantumi.getSemillas(6) > 6 * numInicialSemillas)
-                ? "Gana Jugador 1"
-                : "Gana Jugador 2";
-        if (juegoBantumi.getSemillas(6) == 6 * numInicialSemillas) {
+        String texto;
+        int semillasJ1 = juegoBantumi.getSemillas(6); // Puntaje Jugador 1
+        int semillasJ2 = juegoBantumi.getSemillas(13); // Puntaje Jugador 2
+
+        if (semillasJ1 > semillasJ2) {
+            texto = "Gana Jugador 1";
+        } else if (semillasJ1 < semillasJ2) {
+            texto = "Gana Jugador 2";
+        } else {
             texto = "¡¡¡ EMPATE !!!";
         }
 
-        // @TODO guardar puntuación
-
-        // terminar
+        // Mostrar el diálogo de fin de juego
         new FinalAlertDialog(texto).show(getSupportFragmentManager(), "ALERT_DIALOG");
+
+        // Crear el diálogo para confirmar si se quiere guardar el puntaje
+        new AlertDialog.Builder(this)
+                .setTitle("Guardar puntaje")
+                .setMessage("¿Deseas guardar el puntaje?")
+                .setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Guardar el puntaje en la base de datos si el usuario confirma
+                        guardarPuntuacion(semillasJ1, semillasJ2);
+                        Toast.makeText(getApplicationContext(), "Puntaje guardado", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Si el usuario elige no guardar, cerrar el diálogo
+                        dialog.dismiss();
+                        Toast.makeText(getApplicationContext(), "Puntaje no guardado", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setCancelable(false)  // Evitar que el diálogo se cierre si tocan fuera
+                .show();
     }
+
+
+    private void guardarPartida() {
+        try (FileOutputStream fos = openFileOutput("partidaGuard.json", Context.MODE_PRIVATE);
+             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(juegoBantumi);
+            Log.i(LOG_TAG, "Click botón Guardar -> Partida guardada correctamente");
+            Snackbar.make(
+                    findViewById(android.R.id.content),
+                    getString(R.string.txtOpcionGuardar ),
+                    Snackbar.LENGTH_SHORT
+            ).show();
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Error guardando la partida", e);
+        }
+    }
+
+    private void recuperarPartida() {
+        File archivo = getFileStreamPath("partidaGuard.json");
+
+        if (archivo.exists() && archivo.length() > 0) { // Verificar si el archivo existe y no está vacío
+            try (FileReader reader = new FileReader(archivo)) {
+                Gson gson = new Gson();
+                juegoBantumi = gson.fromJson(reader, JuegoBantumi.class);
+
+                // Verificar los datos recuperados
+                Log.d(LOG_TAG, "Datos recuperados de juegoBantumi: " + juegoBantumi.toString());
+
+                actualizarUI(); // Reiniciar UI con los datos del juego
+
+                Log.i(LOG_TAG, "Partida recuperada");
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "Error recuperando la partida", e);
+            }
+        } else {
+            Log.w(LOG_TAG, "Archivo de partida no existe o está vacío");
+            // Mostrar un mensaje si no hay partida guardada
+        }
+    }
+    private void guardarPuntuacion(int semillasJ1, int semillasJ2) {
+        String nombreJugador = "Jugador"; // Obtener el nombre del jugador de los ajustes del juego
+        Date fechaHora = new Date();
+
+        // Crear una nueva partida
+        Partida partida = new Partida(nombreJugador, fechaHora, semillasJ1, semillasJ2);
+
+        // Guardar la partida en la base de datos usando Room
+        new Thread(() -> {
+            AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+            db.partidaDao().insertarPartida(partida);
+            Log.i(LOG_TAG, "Puntuación guardada: " + partida.toString());
+        }).start();
+    }
+    private void mostrarResultados() {
+        new Thread(() -> {
+            AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+            List<Partida> partidas = db.partidaDao().obtenerTodasPartidas();
+
+            runOnUiThread(() -> {
+                // Aquí podrías mostrar las partidas en un RecyclerView o ListView
+                for (Partida partida : partidas) {
+                    Log.i(LOG_TAG, "Partida: " + partida.toString());
+                }
+            });
+        }).start();
+    }
+
+
+
+
 }

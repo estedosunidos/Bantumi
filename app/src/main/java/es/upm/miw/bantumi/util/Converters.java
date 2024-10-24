@@ -1,31 +1,17 @@
 package es.upm.miw.bantumi.util;
-
 import androidx.room.TypeConverter;
+import java.util.Date;
 
 public class Converters {
 
-    @TypeConverter
-    public static String fromIntArray(int[] array) {
-        if (array == null) {
-            return null;
+        @TypeConverter
+        public static Date fromTimestamp(Long value) {
+            return value == null ? null : new Date(value);
         }
-        StringBuilder sb = new StringBuilder();
-        for (int i : array) {
-            sb.append(i).append(",");
-        }
-        return sb.toString();
-    }
 
-    @TypeConverter
-    public static int[] toIntArray(String data) {
-        if (data == null) {
-            return null;
+        @TypeConverter
+        public static Long dateToTimestamp(Date date) {
+            return date == null ? null : date.getTime();
         }
-        String[] stringArray = data.split(",");
-        int[] result = new int[stringArray.length];
-        for (int i = 0; i < stringArray.length; i++) {
-            result[i] = Integer.parseInt(stringArray[i]);
-        }
-        return result;
-    }
+
 }

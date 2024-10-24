@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import java.net.HttpCookie;
 import java.util.ArrayList;
 
 import es.upm.miw.bantumi.dominio.logica.JuegoBantumi;
@@ -65,4 +66,6 @@ public class BantumiViewModel extends ViewModel {
         }
         tablero.get(pos).setValue(v);
     }
+
+
 }
